@@ -66,6 +66,32 @@ As quatro compartilham a mesma fundação (banco, tarefas, regras). Por isso a v
 
 ⚠️ **Risco de escopo:** cada dor pode crescer sem fim. Na v0.1, cada uma tem um critério de aceite fechado e nada além dele.
 
+## D-009 — Escritas só por lote atômico · [técnica] · 2026-10-20
+
+O núcleo nunca abre uma transação e espera entre chamadas. Cada operação monta a lista completa de instruções (registro, histórico, idempotência, atividade do projeto) e envia num único `batch`, que o adaptador executa como tudo ou nada.
+
+Motivo: funciona com qualquer driver, inclusive os que usam pool de conexões, e torna impossível o estado pela metade. Isso está comprovado pelo teste do cenário 10, que reprova quando a transação é removida.
+
+## D-010 — Duas proteções contra duplicata · [técnica] · 2026-10-20
+
+1. **Chave de idempotência** (`idempotencyKey`). A mesma solicitação processada duas vezes (duplo Enter, nova tentativa da IA) devolve o item já criado, marcado com `duplicate: true`.
+2. **Título igual a uma tarefa aberta** no mesmo projeto, ignorando acento, maiúsculas e espaços. A criação é recusada com `possible_duplicate` e o id da existente. A interface pergunta "criar mesmo assim?" e reenvia com `allowDuplicate: true`.
+
+## D-011 — Excluir é excluir · [técnica] · 2026-10-20
+
+- Ao excluir um registro, o histórico mantém a trilha (o quê e quando), mas o **conteúdo** de todas as entradas anteriores é apagado.
+- Excluir uma tarefa exclui os seus lembretes.
+- Excluir um projeto mantém tarefas, notas e decisões, só desfaz o vínculo.
+- Excluir uma tarefa **não** exclui a captura de origem na Inbox, e vice-versa: são ações separadas e explícitas.
+
+## D-012 — Decisões registram quem propôs · [técnica] · 2026-10-20
+
+Uma decisão só é gravada depois de confirmada pelo usuário. O campo `proposedBy` (`user` | `sophia`) preserva a origem: uma sugestão da SOPHIA aceita nunca é atribuída ao usuário. Revisar uma decisão marca a antiga como `superseded`. Ela sai da lista vigente, mas continua no histórico.
+
+## D-013 — Lembrete nasce "pending" · [técnica] · 2026-10-20
+
+Criar um lembrete só o salva (`pending`). Ele só passa a `scheduled` quando o agendador (etapa 4) o assume. A interface nunca diz "agendado" antes disso.
+
 ## Pendências
 
 - [pendente] Modelo de conversa local (testar 2–3 candidatos no Mac do usuário).

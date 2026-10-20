@@ -2,7 +2,21 @@
 
 **Sistema Operacional Pessoal Humanizado de Inteligência Artificial.** Um app desktop para macOS, local-first, que ajuda a transformar pensamentos, intenções e ideias em decisões, tarefas e resultados, reduzindo a carga mental.
 
-> Estado: planejamento concluído, implementação não iniciada. Veja `docs/04-estado-atual.md`.
+> Estado: núcleo de dados pronto e testado (etapas 0 e 1). Ainda sem interface. Veja `docs/04-estado-atual.md`.
+
+## Desenvolvimento
+
+Requer Node.js 22.13 ou superior.
+
+```bash
+npm install
+npm run check   # lint + tipos + testes
+```
+
+| Pasta | Conteúdo |
+|---|---|
+| `packages/core` | Domínio, regras e persistência (TypeScript puro, sem interface) |
+| `docs/` | Decisões, investigação, plano e estado atual |
 
 ## Documentação
 
