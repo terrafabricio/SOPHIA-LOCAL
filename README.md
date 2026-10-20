@@ -2,7 +2,7 @@
 
 **Sistema Operacional Pessoal Humanizado de Inteligência Artificial.** Um app desktop para macOS, local-first, que ajuda a transformar pensamentos, intenções e ideias em decisões, tarefas e resultados, reduzindo a carga mental.
 
-> Estado: núcleo de dados pronto e testado (etapas 0 e 1). Ainda sem interface. Veja `docs/04-estado-atual.md`.
+> Estado: núcleo de dados e interpretação de datas prontos e testados (etapas 0 a 2). Ainda sem interface. Veja `docs/04-estado-atual.md`.
 
 ## Desenvolvimento
 
@@ -26,6 +26,7 @@ npm run check   # lint + tipos + testes
 | [`docs/02-investigacao-ia.md`](docs/02-investigacao-ia.md) | Laya, EmbeddingGemma 2 e modelo local: o que foi verificado |
 | [`docs/03-plano-mvp.md`](docs/03-plano-mvp.md) | Arquitetura, critérios de aceite da v0.1, etapas e riscos |
 | [`docs/04-estado-atual.md`](docs/04-estado-atual.md) | Onde paramos e o próximo passo |
+| [`docs/05-expressoes-de-data.md`](docs/05-expressoes-de-data.md) | Datas e horários que a SOPHIA entende, e quando pergunta |
 
 ## Princípios em uma linha
 

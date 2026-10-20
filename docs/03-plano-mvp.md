@@ -112,7 +112,7 @@ Cada etapa termina com testes verdes e o arquivo `docs/04-estado-atual.md` atual
 |---|---|---|---|---|
 | 0 ✅ | **Fundação** | Monorepo (npm workspaces), TS strict, Vitest, ESLint, CI no GitHub Actions | nuvem | — |
 | 1 ✅ | **Banco e domínio** | Migrações SQLite; Inbox, Tarefa, Projeto, Decisão, Nota, Lembrete e Histórico; escrita atômica em lote e idempotência | nuvem | 0 |
-| 2 | **Captura e Inbox** | Captura → Inbox → converter/arquivar; interpretador determinístico de datas em pt-BR | nuvem | 1 |
+| 2 ✅ | **Captura e Inbox** | Captura → Inbox → converter/arquivar; interpretador determinístico de datas em pt-BR | nuvem | 1 |
 | 3 | **Regras** | Próxima ação, prioridades, prazos, projetos parados, resumo de retomada | nuvem | 1 |
 | 4 | **Agendador de lembretes** | Máquina de estados, recuperação após reinício, anti-duplicata, recorrência, fuso | nuvem (lógica) | 1 |
 | 5 | **Casca desktop** | App Tauri: barra de menus, atalho global, notificações, telas Agora, Inbox, Projeto e Retomar | **Mac** | 2, 3, 4 |
@@ -135,7 +135,7 @@ Cada etapa termina com testes verdes e o arquivo `docs/04-estado-atual.md` atual
 | R-03 | Notificação com o app **totalmente encerrado** não é garantida | Não prometer isso. App inicia com o sistema e fica na barra de menus; perdidos aparecem ao reabrir |
 | R-04 | Modelo local de ~8B pode errar intenções e datas | IA nunca executa direto: intenção validada + confirmação; interpretador determinístico de datas tem prioridade |
 | R-05 | EmbeddingGemma 2 é recente; o suporte no Ollama pode estar instável | Busca textual primeiro; semântica só depois da verificação (D-006) |
-| R-06 | Escopo: 4 dores + visão longa tendem a crescer | Critérios fechados da v0.1; ideias novas vão para `docs/05-futuro.md` (a criar) |
+| R-06 | Escopo: 4 dores + visão longa tendem a crescer | Critérios fechados da v0.1; ideias novas vão para `docs/06-futuro.md` (a criar) |
 | R-07 | App sem assinatura da Apple mostra alerta do Gatekeeper | Aceitável para uso pessoal; documentar como abrir |
 | R-08 | O plugin SQL do Tauri pode não garantir que um lote rode numa transação só (usa pool de conexões) | O núcleo só escreve via `batch` atômico (D-009). Na etapa 5, verificar o plugin; se não garantir, criar um comando Rust mínimo `db_batch` |
 

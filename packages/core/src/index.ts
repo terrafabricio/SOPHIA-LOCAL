@@ -11,3 +11,5 @@ export * from "./domain/decisions";
 export * from "./domain/notes";
 export * from "./domain/reminders";
 export * from "./export";
+export * from "./parsing/dates-ptbr";
+export * from "./capture/propose";

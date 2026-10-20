@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { nowIso, type CoreContext } from "../context";
 import { fail, ok, type Result } from "../result";
-import type { SqlValue } from "../storage/driver";
+import type { SqlValue, Statement } from "../storage/driver";
 import {
   auditStatement,
   commit,
@@ -113,33 +113,47 @@ export async function listReminders(
   return rows.map(toReminder);
 }
 
+/**
+ * Prepara a criação sem executar. `taskCreatedInSameBatch` permite ligar o
+ * lembrete a uma tarefa que nasce no mesmo lote (conversão da Inbox).
+ */
+export async function prepareCreateReminder(
+  ctx: CoreContext,
+  input: CreateReminderInput,
+  extra: { taskCreatedInSameBatch?: boolean } = {},
+): Promise<Result<{ id: string; statements: Statement[] }>> {
+  const parsed = parseInput(createReminderSchema, input);
+  if (!parsed.ok) return parsed;
+  const v = parsed.value;
+  const taskId = v.taskId ?? null;
+  if (taskId && !extra.taskCreatedInSameBatch && !(await exists(ctx, "tasks", taskId))) {
+    return fail("not_found", "Tarefa não encontrada.", { taskId });
+  }
+  const id = ctx.newId();
+  const now = nowIso(ctx);
+  const row = {
+    id,
+    title: v.title,
+    task_id: taskId,
+    due_at: new Date(v.dueAt).toISOString(),
+    timezone: v.timezone,
+    status: "pending",
+    fired_at: null,
+    created_at: now,
+    updated_at: now,
+  } satisfies ReminderRow;
+  const statements = [insertStatement("reminders", row), auditStatement(ctx, "reminder.created", "reminder", id, { after: row })];
+  if (v.idempotencyKey) statements.push(operationStatement(ctx, v.idempotencyKey, "reminder.create", "reminder", id));
+  return ok({ id, statements });
+}
+
 export async function createReminder(ctx: CoreContext, input: CreateReminderInput): Promise<Result<Reminder>> {
   return withIdempotency(ctx, input.idempotencyKey, "reminder.create", (id) => getReminder(ctx, id), async () => {
-    const parsed = parseInput(createReminderSchema, input);
-    if (!parsed.ok) return parsed;
-    const v = parsed.value;
-    const taskId = v.taskId ?? null;
-    if (taskId && !(await exists(ctx, "tasks", taskId))) {
-      return fail("not_found", "Tarefa não encontrada.", { taskId });
-    }
-    const id = ctx.newId();
-    const now = nowIso(ctx);
-    const row = {
-      id,
-      title: v.title,
-      task_id: taskId,
-      due_at: new Date(v.dueAt).toISOString(),
-      timezone: v.timezone,
-      status: "pending",
-      fired_at: null,
-      created_at: now,
-      updated_at: now,
-    } satisfies ReminderRow;
-    const statements = [insertStatement("reminders", row), auditStatement(ctx, "reminder.created", "reminder", id, { after: row })];
-    if (v.idempotencyKey) statements.push(operationStatement(ctx, v.idempotencyKey, "reminder.create", "reminder", id));
-    const saved = await commit(ctx, statements);
+    const prepared = await prepareCreateReminder(ctx, input);
+    if (!prepared.ok) return prepared;
+    const saved = await commit(ctx, prepared.value.statements);
     if (!saved.ok) return saved;
-    return loadOrFail(ctx, id);
+    return loadOrFail(ctx, prepared.value.id);
   });
 }
 

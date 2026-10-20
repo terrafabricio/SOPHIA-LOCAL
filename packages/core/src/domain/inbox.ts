@@ -16,6 +16,7 @@ import {
 import { exists, idempotencyKeySchema, parseInput } from "./common";
 import { getNote, prepareCreateNote, type CreateNoteInput, type Note } from "./notes";
 import { getProject, prepareCreateProject, type CreateProjectInput, type Project } from "./projects";
+import { listReminders, prepareCreateReminder, type Reminder } from "./reminders";
 import { getTask, prepareCreateTask, type CreateTaskInput, type Task } from "./tasks";
 
 export const INBOX_STATUSES = ["open", "converted", "archived"] as const;
@@ -228,25 +229,43 @@ async function convert<T>(
   return ok({ item: updated, created });
 }
 
-export function convertInboxToTask(
+export interface ConvertToTaskOptions extends Omit<CreateTaskInput, "idempotencyKey" | "title"> {
+  title?: string;
+  /** Lembrete criado no mesmo lote da tarefa: ou os dois são gravados, ou nenhum. */
+  reminder?: { dueAt: string; timezone: string; title?: string };
+}
+
+export async function convertInboxToTask(
   ctx: CoreContext,
   itemId: string,
-  overrides: Omit<CreateTaskInput, "idempotencyKey" | "title"> & { title?: string } = {},
-): Promise<Result<ConversionResult<Task>>> {
-  return convert(
+  options: ConvertToTaskOptions = {},
+): Promise<Result<ConversionResult<Task> & { reminder: Reminder | null }>> {
+  const { reminder, ...overrides } = options;
+  const converted = await convert(
     ctx,
     itemId,
     "task",
-    (item) => {
+    async (item) => {
       const title = overrides.title ?? deriveTitle(item.text);
-      return prepareCreateTask(
+      const task = await prepareCreateTask(
         ctx,
         { description: descriptionFrom(item.text, title), ...overrides, title },
         { inboxItemId: item.id },
       );
+      if (!task.ok || !reminder) return task;
+      const rem = await prepareCreateReminder(
+        ctx,
+        { title: reminder.title ?? title, dueAt: reminder.dueAt, timezone: reminder.timezone, taskId: task.value.id },
+        { taskCreatedInSameBatch: true },
+      );
+      if (!rem.ok) return rem;
+      return ok({ id: task.value.id, statements: [...task.value.statements, ...rem.value.statements] });
     },
     (id) => getTask(ctx, id),
   );
+  if (!converted.ok) return converted;
+  const [created] = reminder ? await listReminders(ctx, { taskId: converted.value.created.id }) : [];
+  return ok({ ...converted.value, reminder: created ?? null });
 }
 
 export function convertInboxToProject(

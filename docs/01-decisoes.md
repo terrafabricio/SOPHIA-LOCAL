@@ -92,6 +92,17 @@ Uma decisão só é gravada depois de confirmada pelo usuário. O campo `propose
 
 Criar um lembrete só o salva (`pending`). Ele só passa a `scheduled` quando o agendador (etapa 4) o assume. A interface nunca diz "agendado" antes disso.
 
+## D-014 — Datas: errar por omissão, nunca por invenção · [técnica] · 2026-10-20
+
+O interpretador de datas (sem IA) reconhece um conjunto fechado de expressões (`docs/05-expressoes-de-data.md`):
+
+- **Uma leitura possível:** resolve, e toda suposição feita é mostrada ("o dia 5 deste mês já passou, considerei 05/11").
+- **Mais de uma leitura razoável** ("próxima sexta", "às 3"): não escolhe; devolve as opções e a pergunta.
+- **Período vago** ("semana que vem"): não inventa um dia.
+- **Forma que também aparece fora de datas** ("segunda versão", "1/2 xícara", "as 3 ideias"): só reconhece com contexto claro.
+
+A proposta de tarefa não é gravada. A gravação acontece na conversão, com o que foi confirmado. Tarefa e lembrete entram no mesmo lote atômico.
+
 ## Pendências
 
 - [pendente] Modelo de conversa local (testar 2–3 candidatos no Mac do usuário).
